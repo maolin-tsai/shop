@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ededed"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#ffffff"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_titlebar_update"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="15dp"
+                android:gravity="center"
+                android:text="刷新数据" />
+
+            <TextView
+                android:id="@+id/tv_titlebar_shopcar"
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:text="购物车"
+                android:textColor="#1a1a1a"
+                android:textSize="17dp" />
+
+            <TextView
+                android:id="@+id/tv_titlebar_right"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="TextView" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>
