@@ -25,9 +25,12 @@
                 android:id="@+id/tv_titlebar_update"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:paddingLeft="13dp"
+                android:paddingRight="13dp"
                 android:textSize="15dp"
                 android:gravity="center"
-                android:text="刷新数据" />
+                android:text="刷新数据"
+                android:textColor="#4c4c4c" />
 
             <TextView
                 android:id="@+id/tv_titlebar_shopcar"
@@ -36,13 +39,20 @@
                 android:layout_centerHorizontal="true"
                 android:text="购物车"
                 android:textColor="#1a1a1a"
+                android:gravity="center"
                 android:textSize="17dp" />
 
             <TextView
-                android:id="@+id/tv_titlebar_right"
+                android:id="@+id/tv_titlebar_edit"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="TextView" />
+                android:layout_alignParentRight="true"
+                android:text="编辑"
+                android:textColor="#4c4c4c"
+                android:textSize="15dp"
+                android:gravity="center"
+                android:paddingLeft="13dp"
+                android:paddingRight="13dp" />
         </RelativeLayout>
     </LinearLayout>
 
