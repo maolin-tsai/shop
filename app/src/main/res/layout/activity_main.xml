@@ -36,7 +36,7 @@
                 android:textColor="#4c4c4c" />
 
             <TextView
-                android:id="@+id/tv_titlebar_shopcar"
+                android:id="@+id/tv_titlebar_center"
                 android:layout_width="200dp"
                 android:layout_height="match_parent"
                 android:layout_centerHorizontal="true"
