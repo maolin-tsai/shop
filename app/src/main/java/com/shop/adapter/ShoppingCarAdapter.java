@@ -11,10 +11,14 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.shop.R;
 
 import com.shop.bean.ShoppingCarDataBean;
+import com.shop.util.ToastUtil;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -76,12 +80,17 @@ public class ShoppingCarAdapter extends BaseExpandableListAdapter {
     }
 
     static class GroupViewHolder {
+
         // relative shopname component
-        @BindView(R.id.iv_select)  ImageView ivSelect;
-        @BindView(R.id.tv_store_name) TextView tvStoreName;
-        @BindView(R.id.ll) LinearLayout ll;
+        //@BindView(R.id.dialog_two_ll)    LinearLayout ll;
+        @BindView(R.id.iv_group_select_all)  ImageView ivSelect;
+        @BindView(R.id.tv_store_name)    TextView tvStoreName;
+        @BindView(R.id.shop_car_group_LL)    LinearLayout ll;
+       // LinearLayout ll;
 
         GroupViewHolder(View view) {
+          //   ll = (LinearLayout)view.findViewById(R.id.shop_car_group_LL);
+
             ButterKnife.bind(this, view);
         }
     }
@@ -101,19 +110,287 @@ public class ShoppingCarAdapter extends BaseExpandableListAdapter {
             groupViewHolder = (GroupViewHolder)convertView.getTag();
         }
 
+        final ShoppingCarDataBean.DatasBean datasBean = data.get(groupPosition);
+        //店铺ID
+        String store_id = datasBean.getStore_id();
+        //店铺名称
+        String store_name = datasBean.getStore_name();
+
+        // show id name
+        if (store_name != null) {
+            groupViewHolder.tvStoreName.setText(store_name);
+        } else {
+            groupViewHolder.tvStoreName.setText("");
+        }
+        // set show group stats
+        setShopGroupSelect(groupViewHolder,datasBean);
+
+        final boolean isSelect_shop = datasBean.getIsSelect_shop();
+
+
+
+        //System.out.println("groupViewHolder ll="+groupViewHolder.ll);
+        //店铺选择框的点击事件
+       groupViewHolder.ll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                datasBean.setIsSelect_shop(!isSelect_shop);
+
+                List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = datasBean.getGoods();
+                for (int i = 0; i < goods.size(); i++) {
+                    ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(i);
+                    goodsBean.setIsSelect(!isSelect_shop);
+                }
+                notifyDataSetChanged(); // update group view
+            }
+        });
+        boolean bAllSelect = false;
+        //当所有的选择框都是选中的时候，全选也要选中
+        for (int i = 0; i < data.size(); i++) {
+            List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = data.get(i).getGoods();
+            for (int y = 0; y < goods.size(); y++) {
+                ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(y);
+                boolean isSelect = goodsBean.getIsSelect();
+                if (isSelect) {
+                    bAllSelect = true;
+                } else {
+                    bAllSelect = false;
+                    break ;//根据标记，跳出嵌套循环
+                }
+            }
+        }
+        if (bAllSelect) {
+            ivSelectAll.setBackgroundResource(R.mipmap.select);
+        } else {
+            ivSelectAll.setBackgroundResource(R.mipmap.unselect);
+        }
+
+        //合计的计算
+        total_price = 0.0;
+        tvTotalPrice.setText("$0.00");
+        for (int i = 0; i < data.size(); i++) {
+            List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = data.get(i).getGoods();
+            for (int y = 0; y < goods.size(); y++) {
+                ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(y);
+                boolean isSelect = goodsBean.getIsSelect();
+                if (isSelect) {
+                    String num = goodsBean.getGoods_num();
+                    String price = goodsBean.getGoods_price();
+
+                    double v = Double.parseDouble(num);
+                    double v1 = Double.parseDouble(price);
+
+                    total_price = total_price + v * v1;
+
+                    //让Double类型完整显示，不用科学计数法显示大写字母E
+                    DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                    tvTotalPrice.setText("$" + decimalFormat.format(total_price));
+                }
+            }
+        }
+
+        //全选的点击事件
+        llSelectAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isSelectAll = !isSelectAll;
+
+                if (isSelectAll) {
+                    for (int i = 0; i < data.size(); i++) {
+                        List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = data.get(i).getGoods();
+                        for (int y = 0; y < goods.size(); y++) {
+                            ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(y);
+                            goodsBean.setIsSelect(true);
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < data.size(); i++) {
+                        List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = data.get(i).getGoods();
+                        for (int y = 0; y < goods.size(); y++) {
+                            ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(y);
+                            goodsBean.setIsSelect(false);
+                        }
+                    }
+                }
+                notifyDataSetChanged();
+            }
+        });
+        //去结算的点击事件
+        btnOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //创建临时的List，用于存储有商品被选中的店铺
+                List<ShoppingCarDataBean.DatasBean> tempStores = new ArrayList<>();
+                for (int i = 0; i < data.size(); i++) {
+                    //店铺中是否有商品被选中
+                    boolean hasGoodsSelect = false;
+                    //创建临时的List，用于存储被选中的商品
+                    List<ShoppingCarDataBean.DatasBean.GoodsBean> tempGoods = new ArrayList<>();
+
+                    ShoppingCarDataBean.DatasBean storesBean = data.get(i);
+                    List<ShoppingCarDataBean.DatasBean.GoodsBean> goods = storesBean.getGoods();
+                    for (int y = 0; y < goods.size(); y++) {
+                        ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = goods.get(y);
+                        boolean isSelect = goodsBean.getIsSelect();
+                        if (isSelect) {
+                            hasGoodsSelect = true;
+                            tempGoods.add(goodsBean);
+                        }
+                    }
+
+                    if (hasGoodsSelect) {
+                        ShoppingCarDataBean.DatasBean storeBean = new ShoppingCarDataBean.DatasBean();
+                        storeBean.setStore_id(storesBean.getStore_id());
+                        storeBean.setStore_name(storesBean.getStore_name());
+                        storeBean.setGoods(tempGoods);
+
+                        tempStores.add(storeBean);
+                    }
+                }
+
+                if (tempStores != null && tempStores.size() > 0) {//如果有被选中的
+                    /**
+                     * 实际开发中，如果有被选中的商品，
+                     * 则跳转到确认订单页面，完成后续订单流程。
+                     */
+                    ToastUtil.makeText(context, "跳转到确认订单页面，完成后续订单流程");
+                } else {
+                    ToastUtil.makeText(context, "请选择要购买的商品");
+                }
+            }
+        });
+
+        //删除的点击事件
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * 实际开发中，通过回调请求后台接口实现删除操作
+                 */
+                if (mDeleteListener != null) {
+                    mDeleteListener.onDelete();
+                }
+            }
+        });
+        return convertView;
+    }
+    public void setShopGroupSelect(GroupViewHolder groupViewHolder ,ShoppingCarDataBean.DatasBean datasBean ){
+
+        // 商品被[全选]，商铺也要選
+        for(int i=0 ;i<datasBean.getGoods().size(); i++)
+        {
+            ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = datasBean.getGoods().get(i);
+            boolean isSelect = goodsBean.getIsSelect();
+            if(isSelect)
+               datasBean.setIsSelect_shop(true);
+            else{
+               datasBean.setIsSelect_shop(false);
+               break;
+            }
+        }
+        //因为set之后要重新get，所以这一块代码要放到一起执行
+        //店铺是否在购物车中被选中(更新店鋪圖片)
+        boolean isSelect_shop = datasBean.getIsSelect_shop();
+        if (isSelect_shop) {
+            groupViewHolder.ivSelect.setImageResource(R.mipmap.select);
+        } else {
+            groupViewHolder.ivSelect.setImageResource(R.mipmap.unselect);
+        }
+
+    }
+    static class ChildViewHolder {
+        @BindView(R.id.iv_select) ImageView ivSelect;
+        @BindView(R.id.iv_photo) ImageView ivPhoto;
+        @BindView(R.id.tv_name) TextView tvName;
+        @BindView(R.id.tv_price_key) TextView tvPriceKey;
+        @BindView(R.id.tv_price_value) TextView tvPriceValue;
+        @BindView(R.id.iv_edit_subtract) ImageView ivEditSubtract;
+        @BindView(R.id.tv_edit_buy_number) TextView tvEditBuyNumber;
+        @BindView(R.id.iv_edit_add) ImageView ivEditAdd;
+        @BindView(R.id.view) View view;
+        @BindView(R.id.view_last) View viewLast;
+
+        ChildViewHolder(View view) {
+            ButterKnife.bind(this, view);
+        }
+    }
+    @Override
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+        ChildViewHolder childViewHolder;
+        if (convertView == null) {
+            convertView = View.inflate(context, R.layout.item_shop_car_child, null);
+
+            childViewHolder = new ChildViewHolder(convertView);
+            convertView.setTag(childViewHolder);
+        } else {
+            childViewHolder = (ChildViewHolder) convertView.getTag();
+        }
+        final ShoppingCarDataBean.DatasBean datasBean = data.get(groupPosition);
+        //店铺ID
+        String store_id = datasBean.getStore_id();
+        //店铺名称
+        String store_name = datasBean.getStore_name();
+        //店铺是否在购物车中被选中
+        final boolean isSelect_shop = datasBean.getIsSelect_shop();
+        final ShoppingCarDataBean.DatasBean.GoodsBean goodsBean = datasBean.getGoods().get(childPosition);
+        //商品图片
+        String goods_image = goodsBean.getGoods_image();
+        //商品ID
+        final String goods_id = goodsBean.getGoods_id();
+        //商品名称
+        String goods_name = goodsBean.getGoods_name();
+        //商品价格
+        String goods_price = goodsBean.getGoods_price();
+        //商品数量
+        String goods_num = goodsBean.getGoods_num();
+        //商品是否被选中
+        final boolean isSelect = goodsBean.getIsSelect();
+
+        //System.out.println("goods_image="+goods_image);
+        System.out.println("ivPhoto="+childViewHolder.ivPhoto);
+        Glide.with(context)
+                .load(goods_image)
+                .into(childViewHolder.ivPhoto);
+
+
+        if (goods_name != null) {
+            childViewHolder.tvName.setText(goods_name);
+        } else {
+            childViewHolder.tvName.setText("");
+        }
+        if (goods_price != null) {
+            childViewHolder.tvPriceValue.setText(goods_price);
+        } else {
+            childViewHolder.tvPriceValue.setText("");
+        }
+        if (goods_num != null) {
+            childViewHolder.tvEditBuyNumber.setText(goods_num);
+        } else {
+            childViewHolder.tvEditBuyNumber.setText("");
+        }
+
+        //商品是否被选中
+        if (isSelect) {
+            childViewHolder.ivSelect.setImageResource(R.mipmap.select);
+        } else {
+            childViewHolder.ivSelect.setImageResource(R.mipmap.unselect);
+        }
         return convertView;
     }
 
 
-
     @Override
     public int getChildrenCount(int groupPosition) {
-        return 0;
+        if (data.get(groupPosition).getGoods() != null && data.get(groupPosition).getGoods().size() > 0) {
+            return data.get(groupPosition).getGoods().size();
+        } else {
+            return 0;
+        }
     }
 
     @Override
     public Object getChild(int groupPosition, int childPosition) {
-        return null;
+        return data.get(groupPosition).getGoods().get(childPosition);
     }
 
 
@@ -128,13 +405,33 @@ public class ShoppingCarAdapter extends BaseExpandableListAdapter {
     }
 
 
-    @Override
-    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        return null;
-    }
 
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return false;
     }
+
+    //删除的回调
+    public interface OnDeleteListener {
+        void onDelete();
+    }
+
+    public void setOnDeleteListener(OnDeleteListener listener) {
+        mDeleteListener = listener;
+    }
+
+    private OnDeleteListener mDeleteListener;
+
+    //修改商品数量的回调
+    public interface OnChangeCountListener {
+        void onChangeCount(String goods_id);
+    }
+
+    public void setOnChangeCountListener(OnChangeCountListener listener) {
+        mChangeCountListener = listener;
+    }
+
+    private OnChangeCountListener mChangeCountListener;
+
+
 }

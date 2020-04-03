@@ -23,9 +23,9 @@
             android:maxLines="2"/>
 
         <LinearLayout
-            android:id="@+id/ll"
+            android:id="@+id/dialog_two_ll"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="50dp"
             android:layout_below="@+id/tv_message"
             android:layout_alignParentBottom="true"
             android:orientation="horizontal">
@@ -54,7 +54,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="0.5dp"
-            android:layout_alignTop="@id/ll"
+            android:layout_alignTop="@id/dialog_two_ll"
             android:background="#e4e4e4"  />
 
         <View

@@ -9,6 +9,7 @@
 
 
     <LinearLayout
+        android:id="@+id/child_ll_test"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:background="#ffffff">
@@ -105,7 +106,7 @@
                         android:textSize="12dp"/>
 
                     <ImageView
-                        android:id="@+id/imageView3"
+                        android:id="@+id/iv_edit_add"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:paddingLeft="15dp"
